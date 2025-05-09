@@ -18,7 +18,7 @@ const Outgoing = () => {
 
   useEffect(() => {
     if (!token) return navigate("/signin");
-    const axiosInstance = axios.create({ baseURL: "https://wantik-backend-kb.onrender.com/sales/", headers: { Authorization: `Bearer ${token}` } });
+    const axiosInstance = axios.create({ baseURL: "http://127.0.0.1:8000/sales/", headers: { Authorization: `Bearer ${token}` } });
     axiosInstance.interceptors.response.use(
       response => response,
       error => {
@@ -71,7 +71,7 @@ const Outgoing = () => {
 
   const handleStatusChange = async (id, status) => {
     try {
-      const res = await axios.patch(`https://wantik-backend-kb.onrender.com/sales/outgoing-mails/${id}/`, { status }, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.patch(`http://127.0.0.1:8000/sales/outgoing-mails/${id}/`, { status }, { headers: { Authorization: `Bearer ${token}` } });
       setMails(mails.map(mail => mail.id === id ? res.data : mail));
       setFilteredMails(filteredMails.map(mail => mail.id === id ? res.data : mail));
     } catch (err) {
@@ -83,7 +83,7 @@ const Outgoing = () => {
     e.preventDefault();
     if (!token) return navigate("/signin");
     try {
-      const res = await axios.post("https://wantik-backend-kb.onrender.com/sales/outgoing-mails/", { ...formData, year }, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.post("http://127.0.0.1:8000/sales/outgoing-mails/", { ...formData, year }, { headers: { Authorization: `Bearer ${token}` } });
       setMails([res.data, ...mails]);
       setFilteredMails([res.data, ...mails]);
       setFormData({ company_name: "", company_email: "", contact_email: "", mail_subject: "", quote_no: "", message: "" });
@@ -158,7 +158,7 @@ const Outgoing = () => {
             <form onSubmit={handleSubmit} style={{ padding: "1rem 0" }}>
               <h2 style={{ marginBottom: "1rem", fontSize: "1.5rem", color: "#333" }}>Send New Quote</h2>
               {error && <div style={{ color: "#dc2626", marginBottom: "1rem" }}>{error}</div>}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
                 <div>
                   <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Company Name</label>
                   <select name="company_name" value={formData.company_name} onChange={handleCompanyChange} style={selectStyle} required>
@@ -167,13 +167,15 @@ const Outgoing = () => {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Company Email</label>
-                  <input type="email" name="company_email" value={formData.company_email} onChange={handleInputChange} style={inputStyle} />
-                </div>
-                <div>
                   <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Contact Email</label>
                   <input type="email" name="contact_email" value={formData.contact_email} onChange={handleInputChange} style={inputStyle} />
                 </div>
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Company Email</label>
+                  <input type="email" name="company_email" value={formData.company_email} onChange={handleInputChange} style={inputStyle} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
                 <div>
                   <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Mail Subject</label>
                   <input type="text" name="mail_subject" value={formData.mail_subject} onChange={handleInputChange} style={inputStyle} required />
@@ -186,7 +188,7 @@ const Outgoing = () => {
                   </select>
                 </div>
               </div>
-              <div style={{ marginTop: "1rem" }}>
+              <div style={{ marginBottom: "1rem" }}>
                 <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Message</label>
                 <textarea name="message" value={formData.message} onChange={handleInputChange} style={{ ...inputStyle, height: "100px" }} required />
               </div>

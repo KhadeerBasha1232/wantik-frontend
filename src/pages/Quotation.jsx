@@ -32,28 +32,33 @@ const Quotation = () => {
     status: "",
   });
 
-  const getAuthToken = () => {
-    return localStorage.getItem("accessToken");
+  const styles = {
+    input: { border: "1px solid #ccc", padding: "0.5rem", width: "100%", borderRadius: "5px", fontSize: "0.9rem", boxSizing: "border-box" },
+    errorInput: { border: "1px solid #dc2626" },
+    label: { display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" },
+    button: { padding: "0.5rem 1rem", backgroundColor: "#000", color: "#fff", border: "none", borderRadius: "5px", fontSize: "0.9rem", cursor: "pointer", transition: "background-color 0.3s" },
+    smallButton: { padding: "0.3rem 0.5rem", fontSize: "0.8rem" },
+    removeButton: { padding: "0.3rem 0.5rem", backgroundColor: "#dc2626", color: "#fff", border: "none", borderRadius: "5px", fontSize: "0.8rem", cursor: "pointer", transition: "background-color 0.3s" },
+    tableCell: { border: "1px solid #000", padding: "0.5rem", textAlign: "center", backgroundColor: "#fff" },
+    tableHeader: { border: "1px solid #000", padding: "0.5rem", backgroundColor: "#000", color: "#fff" },
+    modal: { position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 },
+    modalContent: { backgroundColor: "#fff", padding: "2rem", borderRadius: "10px", width: "90%", maxWidth: "600px", boxShadow: "0 8px 16px rgba(0,0,0,0.2)", position: "relative", border: "1px solid #e0e0e0" },
+    closeBtn: { position: "absolute", top: "15px", right: "15px", fontSize: "24px", cursor: "pointer", color: "#666", backgroundColor: "transparent", border: "none", width: "30px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center" },
+    flexRow: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+    errorText: { color: "#dc2626", fontSize: "0.8rem" },
   };
 
+  const getAuthToken = () => localStorage.getItem("accessToken");
+
   const calculateTotals = () => {
-    const subtotal = form.products.reduce(
-      (sum, p) => sum + p.qty * p.unit_price,
-      0
-    );
-    const vat_amount = form.vat_applicable
-      ? (subtotal * form.vat_percentage) / 100
-      : 0;
-    const grand_total = subtotal + vat_amount;
-    return { subtotal, vat_amount, grand_total };
+    const subtotal = form.products.reduce((sum, p) => sum + p.qty * p.unit_price, 0);
+    const vat_amount = form.vat_applicable ? (subtotal * form.vat_percentage) / 100 : 0;
+    return { subtotal, vat_amount, grand_total: subtotal + vat_amount };
   };
 
   const fetchQuotes = async () => {
-    const token = getAuthToken();
     try {
-      const res = await axios.get(`https://wantik-backend-kb.onrender.com/sales/quotes/?year=${year}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`http://127.0.0.1:8000/sales/quotes/?year=${year}`, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
       setQuotes(res.data);
       setFilteredQuotes(res.data);
     } catch (err) {
@@ -63,11 +68,8 @@ const Quotation = () => {
   };
 
   const fetchContacts = async () => {
-    const token = getAuthToken();
     try {
-      const res = await axios.get(`https://wantik-backend-kb.onrender.com/sales/quotation-companies`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`http://127.0.0.1:8000/sales/quotation-companies`, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
       setContacts(res.data);
     } catch (err) {
       console.error("Failed to fetch contacts", err);
@@ -76,11 +78,8 @@ const Quotation = () => {
   };
 
   const fetchUsers = async () => {
-    const token = getAuthToken();
     try {
-      const res = await axios.get(`https://wantik-backend-kb.onrender.com/sales/users/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`http://127.0.0.1:8000/sales/users/`, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
       setUsers(res.data);
     } catch (err) {
       console.error("Failed to fetch users", err);
@@ -88,88 +87,30 @@ const Quotation = () => {
     }
   };
 
-  // Filter logic
   useEffect(() => {
     let filtered = quotes;
-
-    // Filter by quote title
-    if (filters.searchQuoteTitle) {
-      filtered = filtered.filter((quote) =>
-        quote.quote_title.toLowerCase().includes(filters.searchQuoteTitle.toLowerCase())
-      );
-    }
-
-    // Filter by quote number
-    if (filters.searchQuoteNo) {
-      filtered = filtered.filter((quote) =>
-        quote.quote_no.toLowerCase().includes(filters.searchQuoteNo.toLowerCase())
-      );
-    }
-
-    // Filter by company name
-    if (filters.searchCompany) {
-      filtered = filtered.filter((quote) =>
-        quote.company_name.toLowerCase().includes(filters.searchCompany.toLowerCase())
-      );
-    }
-
-    // Filter by contact number
-    if (filters.searchContactNumber) {
-      filtered = filtered.filter((quote) =>
-        (quote.contact_number || "").toLowerCase().includes(filters.searchContactNumber.toLowerCase())
-      );
-    }
-
-    // Filter by status
-    if (filters.status && filters.status !== "all") {
-      filtered = filtered.filter((quote) => quote.status === filters.status);
-    }
-
-    // Filter by date range
+    if (filters.searchQuoteTitle) filtered = filtered.filter((q) => q.quote_title.toLowerCase().includes(filters.searchQuoteTitle.toLowerCase()));
+    if (filters.searchQuoteNo) filtered = filtered.filter((q) => q.quote_no.toLowerCase().includes(filters.searchQuoteNo.toLowerCase()));
+    if (filters.searchCompany) filtered = filtered.filter((q) => q.company_name.toLowerCase().includes(filters.searchCompany.toLowerCase()));
+    if (filters.searchContactNumber) filtered = filtered.filter((q) => (q.contact_number || "").toLowerCase().includes(filters.searchContactNumber.toLowerCase()));
+    if (filters.status && filters.status !== "all") filtered = filtered.filter((q) => q.status === filters.status);
     if (filters.fromDate || filters.toDate) {
-      filtered = filtered.filter((quote) => {
-        const quoteDate = new Date(quote.create_date).getTime();
+      filtered = filtered.filter((q) => {
+        const quoteDate = new Date(q.create_date).getTime();
         const from = filters.fromDate ? new Date(filters.fromDate).getTime() : null;
         const to = filters.toDate ? new Date(filters.toDate).getTime() : null;
-
-        if (from && to) {
-          return quoteDate >= from && quoteDate <= to;
-        } else if (from) {
-          return quoteDate >= from;
-        } else if (to) {
-          return quoteDate <= to;
-        }
-        return true;
+        return (!from || quoteDate >= from) && (!to || quoteDate <= to);
       });
     }
-
     setFilteredQuotes(filtered);
   }, [filters, quotes]);
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({
-      ...filters,
-      [name]: value,
-    });
-  };
+  const handleFilterChange = (e) => setFilters({ ...filters, [e.target.name]: e.target.value });
 
   const handleStatusChange = async (id, status) => {
-    const token = getAuthToken();
-    if (!token) {
-      console.error("Access token not found.");
-      setErrors({ general: "Access token not found." });
-      return;
-    }
     try {
-      const res = await axios.patch(
-        `https://wantik-backend-kb.onrender.com/sales/quotes/${id}/`,
-        { status },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setQuotes((prev) =>
-        prev.map((quote) => (quote.id === id ? res.data : quote))
-      );
+      const res = await axios.patch(`http://127.0.0.1:8000/sales/quotes/${id}/`, { status }, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
+      setQuotes((prev) => prev.map((q) => (q.id === id ? res.data : q)));
     } catch (err) {
       console.error("Failed to update status", err);
       setErrors({ general: "Failed to update status." });
@@ -177,189 +118,76 @@ const Quotation = () => {
   };
 
   const handleAssignToChange = async (id, assignToId) => {
-    const token = getAuthToken();
-    if (!token) {
-      console.error("Access token not found.");
-      setErrors({ general: "Access token not found." });
-      return;
-    }
     try {
-      const res = await axios.patch(
-        `https://wantik-backend-kb.onrender.com/sales/quotes/${id}/`,
-        { assign_to: assignToId || null },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setQuotes((prev) =>
-        prev.map((quote) => (quote.id === id ? res.data : quote))
-      );
+      const res = await axios.patch(`http://127.0.0.1:8000/sales/quotes/${id}/`, { assign_to: assignToId || null }, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
+      setQuotes((prev) => prev.map((q) => (q.id === id ? res.data : q)));
     } catch (err) {
       console.error("Failed to update assign_to", err);
       setErrors({ general: "Failed to update assigned user." });
     }
   };
 
-  const handleEditQuote = (quote) => {
+  const handleEditQuote = (q) => {
     setShowForm(true);
     setIsEditing(true);
-    setEditId(quote.id);
+    setEditId(q.id);
     setForm({
-      quote_title: quote.quote_title,
-      company_name: quote.company_name,
-      contact_email: quote.contact_email || "",
-      company_email: quote.company_email || "",
-      vat_applicable: quote.vat_applicable,
-      vat_percentage: quote.vat_percentage,
-      notes_remarks: quote.notes_remarks || "",
-      products: quote.products.length > 0 ? quote.products.map(p => ({
-        product: p.product,
-        specification: p.specification || "",
-        qty: p.qty,
-        unit_price: p.unit_price,
-      })) : [{ product: "", specification: "", qty: 1, unit_price: 0 }],
+      quote_title: q.quote_title,
+      company_name: q.company_name,
+      contact_email: q.contact_email || "",
+      company_email: q.company_email || "",
+      vat_applicable: q.vat_applicable,
+      vat_percentage: q.vat_percentage,
+      notes_remarks: q.notes_remarks || "",
+      products: q.products.length ? q.products.map((p) => ({ product: p.product, specification: p.specification || "", qty: p.qty, unit_price: p.unit_price })) : [{ product: "", specification: "", qty: 1, unit_price: 0 }],
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
-
-    if (!form.quote_title.trim()) {
-      setErrors({ quote_title: "Quote title is required." });
-      return;
-    }
-    if (!form.company_name) {
-      setErrors({ company_name: "Company name is required." });
-      return;
-    }
-    if (!form.contact_email) {
-      setErrors({ contact_email: "Contact email is required." });
-      return;
-    }
-    const invalidProduct = form.products.find(
-      (p) => !p.product.trim() || p.qty <= 0 || p.unit_price < 0
-    );
-    if (invalidProduct) {
-      setErrors({
-        products:
-          "All products must have a name, positive quantity, and non-negative unit price.",
-      });
-      return;
-    }
+    if (!form.quote_title.trim()) return setErrors({ quote_title: "Quote title is required." });
+    if (!form.company_name) return setErrors({ company_name: "Company name is required." });
+    if (!form.contact_email) return setErrors({ contact_email: "Contact email is required." });
+    if (form.products.some((p) => !p.product.trim() || p.qty <= 0 || p.unit_price < 0)) return setErrors({ products: "All products must have a name, positive quantity, and non-negative unit price." });
 
     const { subtotal, vat_amount, grand_total } = calculateTotals();
-    const token = getAuthToken();
-    if (!token) {
-      setErrors({ general: "Access token not found." });
-      return;
-    }
-
-    const payload = {
-      quote_title: form.quote_title,
-      company_name: form.company_name,
-      contact_email: form.contact_email,
-      company_email: form.company_email,
-      vat_applicable: form.vat_applicable,
-      vat_percentage: form.vat_percentage,
-      year,
-      subtotal,
-      vat_amount,
-      grand_total,
-      notes_remarks: form.notes_remarks,
-      products: form.products.map((p) => ({
-        product: p.product,
-        specification: p.specification || "",
-        qty: p.qty,
-        unit_price: p.unit_price,
-      })),
-    };
+    const payload = { ...form, year, subtotal, vat_amount, grand_total, products: form.products.map((p) => ({ product: p.product, specification: p.specification || "", qty: p.qty, unit_price: p.unit_price })) };
 
     try {
-      if (isEditing) {
-        // Update existing quote
-        const res = await axios.put(
-          `https://wantik-backend-kb.onrender.com/sales/quotes/${editId}/`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setQuotes((prev) =>
-          prev.map((quote) => (quote.id === editId ? res.data : quote))
-        );
-      } else {
-        // Create new quote
-        const res = await axios.post(
-          "https://wantik-backend-kb.onrender.com/sales/quotes/",
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setQuotes((prev) => [res.data, ...prev]);
-      }
-
+      const res = isEditing
+        ? await axios.put(`http://127.0.0.1:8000/sales/quotes/${editId}/`, payload, { headers: { Authorization: `Bearer ${getAuthToken()}` } })
+        : await axios.post("http://127.0.0.1:8000/sales/quotes/", payload, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
+      setQuotes((prev) => isEditing ? prev.map((q) => (q.id === editId ? res.data : q)) : [res.data, ...prev]);
       setShowForm(false);
       setIsEditing(false);
       setEditId(null);
-      setForm({
-        quote_title: "",
-        company_name: "",
-        contact_email: "",
-        company_email: "",
-        vat_applicable: false,
-        vat_percentage: 0,
-        notes_remarks: "",
-        products: [{ product: "", specification: "", qty: 1, unit_price: 0 }],
-      });
+      setForm({ quote_title: "", company_name: "", contact_email: "", company_email: "", vat_applicable: false, vat_percentage: 0, notes_remarks: "", products: [{ product: "", specification: "", qty: 1, unit_price: 0 }] });
     } catch (err) {
       console.error("Failed to create/update quote", err);
-      if (err.response && err.response.data) {
-        setErrors(err.response.data);
-      } else {
-        setErrors({ general: "An unexpected error occurred." });
-      }
+      setErrors(err.response?.data || { general: "An unexpected error occurred." });
     }
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name === "company_name") {
-      const selectedContact = contacts.find((c) => c.company_name === value);
-      setForm({
-        ...form,
-        company_name: value,
-        contact_email: selectedContact ? selectedContact.contact_email : "",
-        company_email: selectedContact ? selectedContact.company_email : "",
-      });
+      const contact = contacts.find((c) => c.company_name === value);
+      setForm({ ...form, company_name: value, contact_email: contact ? contact.contact_email : "", company_email: contact ? contact.company_email : "" });
     } else {
-      setForm({
-        ...form,
-        [name]: type === "checkbox" ? checked : value,
-      });
+      setForm({ ...form, [name]: type === "checkbox" ? checked : value });
     }
   };
 
   const handleProductChange = (index, field, value) => {
     const updatedProducts = [...form.products];
-    updatedProducts[index] = {
-      ...updatedProducts[index],
-      [field]: field === "qty" || field === "unit_price" ? Number(value) : value,
-    };
+    updatedProducts[index] = { ...updatedProducts[index], [field]: field === "qty" || field === "unit_price" ? Number(value) : value };
     setForm({ ...form, products: updatedProducts });
   };
 
-  const addProduct = () => {
-    setForm({
-      ...form,
-      products: [
-        ...form.products,
-        { product: "", specification: "", qty: 1, unit_price: 0 },
-      ],
-    });
-  };
+  const addProduct = () => setForm({ ...form, products: [...form.products, { product: "", specification: "", qty: 1, unit_price: 0 }] });
 
-  const removeProduct = (index) => {
-    if (form.products.length > 1) {
-      const updatedProducts = form.products.filter((_, i) => i !== index);
-      setForm({ ...form, products: updatedProducts });
-    }
-  };
+  const removeProduct = (index) => form.products.length > 1 && setForm({ ...form, products: form.products.filter((_, i) => i !== index) });
 
   useEffect(() => {
     fetchQuotes();
@@ -369,228 +197,29 @@ const Quotation = () => {
 
   const { subtotal, vat_amount, grand_total } = calculateTotals();
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const modalStyle = {
-    position: "fixed",
-    top: "0",
-    left: "0",
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: "1000",
-  };
-
-  const modalContentStyle = {
-    backgroundColor: "#fff",
-    padding: "2rem",
-    borderRadius: "10px",
-    width: "90%",
-    maxWidth: "600px",
-    boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
-    position: "relative",
-    border: "1px solid #e0e0e0",
-  };
-
-  const closeBtnStyle = {
-    position: "absolute",
-    top: "15px",
-    right: "15px",
-    fontSize: "24px",
-    cursor: "pointer",
-    color: "#666",
-    backgroundColor: "transparent",
-    border: "none",
-    width: "30px",
-    height: "30px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    transition: "color 0.3s, transform 0.3s",
-  };
+  const formatDate = (date) => new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
   return (
     <div style={{ padding: "2rem", margin: 0 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1rem",
-        }}
-      >
-        <h2 style={{ fontSize: "1.5rem", color: "#333" }}>
-          Quotations for {year}
-        </h2>
-        <button
-          onClick={() => setShowForm(true)}
-          style={{
-            padding: "0.5rem 1rem",
-            backgroundColor: "#000",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            fontSize: "0.9rem",
-            cursor: "pointer",
-            textTransform: "uppercase",
-            transition: "background-color 0.3s",
-          }}
-          onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
-          onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}
-        >
+      <div style={{ ...styles.flexRow, marginBottom: "1rem" }}>
+        <h2 style={{ fontSize: "1.5rem", color: "#333" }}>Quotations for {year}</h2>
+        <button style={styles.button} onClick={() => setShowForm(true)} onMouseOver={(e) => (e.target.style.backgroundColor = "#333")} onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}>
           Add Quotation
         </button>
       </div>
 
-      {errors.general && (
-        <div style={{ color: "#dc2626", marginBottom: "1rem" }}>
-          {errors.general}
-        </div>
-      )}
+      {errors.general && <div style={styles.errorText}>{errors.general}</div>}
 
-      {/* Filter Section */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "1rem",
-          marginBottom: "1rem",
-          alignItems: "center",
-        }}
-      >
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "1rem" }}>
+        {[{ name: "searchQuoteTitle", label: "Search by Quote Title", width: "200px" }, { name: "searchQuoteNo", label: "Search by Quote No.", width: "200px" }, { name: "searchCompany", label: "Search by Company", width: "200px" }, { name: "searchContactNumber", label: "Search by Contact Number", width: "200px" }, { name: "fromDate", label: "From", type: "date", width: "150px" }, { name: "toDate", label: "To", type: "date", width: "150px" }].map(({ name, label, type = "text", width }) => (
+          <div key={name}>
+            <label style={styles.label}>{label}</label>
+            <input type={type} name={name} value={filters[name]} onChange={handleFilterChange} style={{ ...styles.input, width }} />
+          </div>
+        ))}
         <div>
-          <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-            Search by Quote Title
-          </label>
-          <input
-            type="text"
-            name="searchQuoteTitle"
-            value={filters.searchQuoteTitle}
-            onChange={handleFilterChange}
-            style={{
-              padding: "0.5rem",
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              fontSize: "0.9rem",
-              width: "200px",
-            }}
-          />
-        </div>
-        <div>
-          <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-            Search by Quote No.
-          </label>
-          <input
-            type="text"
-            name="searchQuoteNo"
-            value={filters.searchQuoteNo}
-            onChange={handleFilterChange}
-            style={{
-              padding: "0.5rem",
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              fontSize: "0.9rem",
-              width: "200px",
-            }}
-          />
-        </div>
-        <div>
-          <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-            Search by Company
-          </label>
-          <input
-            type="text"
-            name="searchCompany"
-            value={filters.searchCompany}
-            onChange={handleFilterChange}
-            style={{
-              padding: "0.5rem",
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              fontSize: "0.9rem",
-              width: "200px",
-            }}
-          />
-        </div>
-        <div>
-          <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-            Search by Contact Number
-          </label>
-          <input
-            type="text"
-            name="searchContactNumber"
-            value={filters.searchContactNumber}
-            onChange={handleFilterChange}
-            style={{
-              padding: "0.5rem",
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              fontSize: "0.9rem",
-              width: "200px",
-            }}
-          />
-        </div>
-        <div>
-          <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-            From
-          </label>
-          <input
-            type="date"
-            name="fromDate"
-            value={filters.fromDate}
-            onChange={handleFilterChange}
-            style={{
-              padding: "0.5rem",
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              fontSize: "0.9rem",
-              width: "150px",
-            }}
-          />
-        </div>
-        <div>
-          <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-            To
-          </label>
-          <input
-            type="date"
-            name="toDate"
-            value={filters.toDate}
-            onChange={handleFilterChange}
-            style={{
-              padding: "0.5rem",
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              fontSize: "0.9rem",
-              width: "150px",
-            }}
-          />
-        </div>
-        <div>
-          <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-            Status
-          </label>
-          <select
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-            style={{
-              padding: "0.5rem",
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              fontSize: "0.9rem",
-              width: "150px",
-            }}
-          >
+          <label style={styles.label}>Status</label>
+          <select name="status" value={filters.status} onChange={handleFilterChange} style={{ ...styles.input, width: "150px" }}>
             <option value="all">All Statuses</option>
             <option value="new">New</option>
             <option value="open">Open</option>
@@ -599,354 +228,82 @@ const Quotation = () => {
         </div>
       </div>
 
-      {/* Modal Form */}
       {showForm && (
-        <div style={modalStyle}>
-          <div style={modalContentStyle}>
+        <div style={styles.modal}>
+          <div style={styles.modalContent}>
             <span
-              className="close-btn"
               onClick={() => {
                 setShowForm(false);
                 setIsEditing(false);
                 setEditId(null);
-                setForm({
-                  quote_title: "",
-                  company_name: "",
-                  contact_email: "",
-                  company_email: "",
-                  vat_applicable: false,
-                  vat_percentage: 0,
-                  notes_remarks: "",
-                  products: [{ product: "", specification: "", qty: 1, unit_price: 0 }],
-                });
+                setForm({ quote_title: "", company_name: "", contact_email: "", company_email: "", vat_applicable: false, vat_percentage: 0, notes_remarks: "", products: [{ product: "", specification: "", qty: 1, unit_price: 0 }] });
               }}
-              style={closeBtnStyle}
+              style={styles.closeBtn}
             >
               ×
             </span>
-            <form onSubmit={handleSubmit} style={{ margin: 0, padding: "1rem 0" }}>
-              <h2 style={{ margin: "0 0 1rem 0", fontSize: "1.5rem", color: "#333" }}>
-                {isEditing ? "Edit Quotation" : "Add Quotation"}
-              </h2>
-              {errors.general && (
-                <div style={{ color: "#dc2626", marginBottom: "1rem" }}>
-                  {errors.general}
+            <form onSubmit={handleSubmit} style={{ padding: "1rem 0" }}>
+              <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "1rem" }}>{isEditing ? "Edit Quotation" : "Add Quotation"}</h2>
+              {errors.general && <div style={styles.errorText}>{errors.general}</div>}
+              {[{ name: "quote_title", label: "Quote Title", required: true }, ...(isEditing ? [{ name: "quote_no", label: "Quote Number", value: quotes.find((q) => q.id === editId)?.quote_no || "", readOnly: true, style: { backgroundColor: "#f3f4f6" } }] : [])].map(({ name, label, value = form[name], required, readOnly, style }) => (
+                <div key={name} style={{ marginBottom: "1rem" }}>
+                  <label style={styles.label}>{label}</label>
+                  <input name={name} value={value} onChange={handleChange} style={{ ...styles.input, ...(errors[name] ? styles.errorInput : {}), ...style }} required={required} readOnly={readOnly} />
+                  {errors[name] && <div style={styles.errorText}>{errors[name]}</div>}
                 </div>
-              )}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div>
-                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                    Quote Title
-                  </label>
-                  <input
-                    name="quote_title"
-                    value={form.quote_title}
-                    onChange={handleChange}
-                    style={{
-                      border: errors.quote_title ? "1px solid #dc2626" : "1px solid #ccc",
-                      padding: "0.5rem",
-                      width: "100%",
-                      borderRadius: "5px",
-                      fontSize: "0.9rem",
-                      boxSizing: "border-box",
-                    }}
-                    required
-                  />
-                  {errors.quote_title && (
-                    <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                      {errors.quote_title}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                    Company Name
-                  </label>
-                  <select
-                    name="company_name"
-                    value={form.company_name}
-                    onChange={handleChange}
-                    style={{
-                      border: errors.company_name ? "1px solid #dc2626" : "1px solid #ccc",
-                      padding: "0.5rem",
-                      width: "100%",
-                      borderRadius: "5px",
-                      fontSize: "0.9rem",
-                      boxSizing: "border-box",
-                    }}
-                    required
-                  >
-                    <option value="">Select Company</option>
-                    {contacts.map((contact) => (
-                      <option key={contact.company_name} value={contact.company_name}>
-                        {contact.company_name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.company_name && (
-                    <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                      {errors.company_name}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                    Contact Email
-                  </label>
-                  <input
-                    name="contact_email"
-                    value={form.contact_email}
-                    onChange={handleChange}
-                    type="email"
-                    style={{
-                      border: errors.contact_email ? "1px solid #dc2626" : "1px solid #ccc",
-                      padding: "0.5rem",
-                      width: "100%",
-                      borderRadius: "5px",
-                      fontSize: "0.9rem",
-                      boxSizing: "border-box",
-                    }}
-                    required
-                  />
-                  {errors.contact_email && (
-                    <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                      {errors.contact_email}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                    Company Email
-                  </label>
-                  <input
-                    name="company_email"
-                    value={form.company_email}
-                    onChange={handleChange}
-                    type="email"
-                    style={{
-                      border: errors.company_email ? "1px solid #dc2626" : "1px solid #ccc",
-                      padding: "0.5rem",
-                      width: "100%",
-                      borderRadius: "5px",
-                      fontSize: "0.9rem",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                  {errors.company_email && (
-                    <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                      {errors.company_email}
-                    </div>
-                  )}
-                </div>
-                {isEditing && (
-                  <div>
-                    <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                      Quote Number
-                    </label>
-                    <input
-                      name="quote_no"
-                      value={quotes.find(q => q.id === editId)?.quote_no || ""}
-                      style={{
-                        border: "1px solid #ccc",
-                        padding: "0.5rem",
-                        width: "100%",
-                        borderRadius: "5px",
-                        fontSize: "0.9rem",
-                        boxSizing: "border-box",
-                        backgroundColor: "#f3f4f6",
-                      }}
-                      readOnly
-                    />
+              ))}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+                {[{ name: "company_name", label: "Company Name", type: "select", required: true }, { name: "contact_email", label: "Contact Email", type: "email", required: true }, { name: "company_email", label: "Company Email", type: "email" }].map(({ name, label, type, required }) => (
+                  <div key={name}>
+                    <label style={styles.label}>{label}</label>
+                    {type === "select" ? (
+                      <select name={name} value={form[name]} onChange={handleChange} style={{ ...styles.input, ...(errors[name] ? styles.errorInput : {}) }} required={required}>
+                        <option value="">Select Company</option>
+                        {contacts.map((c) => <option key={c.company_name} value={c.company_name}>{c.company_name}</option>)}
+                      </select>
+                    ) : (
+                      <input name={name} type={type} value={form[name]} onChange={handleChange} style={{ ...styles.input, ...(errors[name] ? styles.errorInput : {}) }} required={required} />
+                    )}
+                    {errors[name] && <div style={styles.errorText}>{errors[name]}</div>}
                   </div>
-                )}
-                <div>
-                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                    VAT Percentage
-                  </label>
-                  <input
-                    name="vat_percentage"
-                    type="number"
-                    value={form.vat_percentage}
-                    onChange={handleChange}
-                    style={{
-                      border: errors.vat_percentage ? "1px solid #dc2626" : "1px solid #ccc",
-                      padding: "0.5rem",
-                      width: "100%",
-                      borderRadius: "5px",
-                      fontSize: "0.9rem",
-                      boxSizing: "border-box",
-                    }}
-                    disabled={!form.vat_applicable}
-                  />
-                  {errors.vat_percentage && (
-                    <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                      {errors.vat_percentage}
-                    </div>
-                  )}
-                </div>
+                ))}
               </div>
-
-              <div style={{ marginTop: "1rem" }}>
-                <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                  Notes/Remarks
-                </label>
-                <textarea
-                  name="notes_remarks"
-                  value={form.notes_remarks}
-                  onChange={handleChange}
-                  style={{
-                    border: errors.notes_remarks ? "1px solid #dc2626" : "1px solid #ccc",
-                    padding: "0.5rem",
-                    width: "100%",
-                    height: "100px",
-                    borderRadius: "5px",
-                    fontSize: "0.9rem",
-                    boxSizing: "border-box",
-                  }}
-                />
-                {errors.notes_remarks && (
-                  <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                    {errors.notes_remarks}
-                  </div>
-                )}
-              </div>
-
-              <div style={{ marginTop: "1rem" }}>
-                <h3 style={{ fontSize: "1.1rem", color: "#333", marginBottom: "0.5rem" }}>
-                  Products
-                </h3>
-                {errors.products && (
-                  <div style={{ color: "#dc2626", fontSize: "0.8rem", marginBottom: "0.5rem" }}>
-                    {errors.products}
-                  </div>
-                )}
+              <div style={{ marginBottom: "1rem" }}>
+                <h3 style={{ fontSize: "1.1rem", color: "#333", marginBottom: "0.5rem" }}>Products</h3>
+                {errors.products && <div style={styles.errorText}>{errors.products}</div>}
                 <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "1rem" }}>
                   <thead>
-                    <tr style={{ backgroundColor: "#000", color: "#fff" }}>
-                      <th style={{ border: "1px solid #000", padding: "0.5rem" }}>Product</th>
-                      <th style={{ border: "1px solid #000", padding: "0.5rem" }}>Specification</th>
-                      <th style={{ border: "1px solid #000", padding: "0.5rem" }}>Quantity</th>
-                      <th style={{ border: "1px solid #000", padding: "0.5rem" }}>Unit Price</th>
-                      <th style={{ border: "1px solid #000", padding: "0.5rem" }}>Total</th>
-                      <th style={{ border: "1px solid #000", padding: "0.5rem" }}>Action</th>
+                    <tr>
+                      {["Product", "Specification", "Quantity", "Unit Price", "Total", "Action"].map((h) => <th key={h} style={styles.tableHeader}>{h}</th>)}
                     </tr>
                   </thead>
                   <tbody>
-                    {form.products.map((product, index) => (
-                      <tr key={index}>
-                        <td style={{ border: "1px solid #000", padding: "0.5rem" }}>
-                          <input
-                            type="text"
-                            value={product.product}
-                            onChange={(e) =>
-                              handleProductChange(index, "product", e.target.value)
-                            }
-                            style={{
-                              border: errors.products?.[index]?.product ? "1px solid #dc2626" : "1px solid #ccc",
-                              padding: "0.5rem",
-                              width: "100%",
-                              borderRadius: "5px",
-                              fontSize: "0.9rem",
-                              boxSizing: "border-box",
-                            }}
-                            required
-                          />
-                          {errors.products?.[index]?.product && (
-                            <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                              {errors.products[index].product}
-                            </div>
-                          )}
+                    {form.products.map((p, i) => (
+                      <tr key={i}>
+                        <td style={styles.tableCell}>
+                          <input type="text" value={p.product} onChange={(e) => handleProductChange(i, "product", e.target.value)} style={{ ...styles.input, ...(errors.products?.[i]?.product ? styles.errorInput : {}) }} required />
+                          {errors.products?.[i]?.product && <div style={styles.errorText}>{errors.products[i].product}</div>}
                         </td>
-                        <td style={{ border: "1px solid #000", padding: "0.5rem" }}>
-                          <input
-                            type="text"
-                            value={product.specification}
-                            onChange={(e) =>
-                              handleProductChange(index, "specification", e.target.value)
-                            }
-                            style={{
-                              border: "1px solid #ccc",
-                              padding: "0.5rem",
-                              width: "100%",
-                              borderRadius: "5px",
-                              fontSize: "0.9rem",
-                              boxSizing: "border-box",
-                            }}
-                          />
+                        <td style={styles.tableCell}>
+                          <input type="text" value={p.specification} onChange={(e) => handleProductChange(i, "specification", e.target.value)} style={styles.input} />
                         </td>
-                        <td style={{ border: "1px solid #000", padding: "0.5rem" }}>
-                          <input
-                            type="number"
-                            value={product.qty}
-                            onChange={(e) =>
-                              handleProductChange(index, "qty", e.target.value)
-                            }
-                            style={{
-                              border: errors.products?.[index]?.qty ? "1px solid #dc2626" : "1px solid #ccc",
-                              padding: "0.5rem",
-                              width: "100%",
-                              borderRadius: "5px",
-                              fontSize: "0.9rem",
-                              boxSizing: "border-box",
-                            }}
-                            min="1"
-                            required
-                          />
-                          {errors.products?.[index]?.qty && (
-                            <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                              {errors.products[index].qty}
-                            </div>
-                          )}
+                        <td style={styles.tableCell}>
+                          <input type="number" value={p.qty} onChange={(e) => handleProductChange(i, "qty", e.target.value)} style={{ ...styles.input, ...(errors.products?.[i]?.qty ? styles.errorInput : {}) }} min="1" required />
+                          {errors.products?.[i]?.qty && <div style={styles.errorText}>{errors.products[i].qty}</div>}
                         </td>
-                        <td style={{ border: "1px solid #000", padding: "0.5rem" }}>
-                          <input
-                            type="number"
-                            value={product.unit_price}
-                            onChange={(e) =>
-                              handleProductChange(index, "unit_price", e.target.value)
-                            }
-                            style={{
-                              border: errors.products?.[index]?.unit_price ? "1px solid #dc2626" : "1px solid #ccc",
-                              padding: "0.5rem",
-                              width: "100%",
-                              borderRadius: "5px",
-                              fontSize: "0.9rem",
-                              boxSizing: "border-box",
-                            }}
-                            min="0"
-                            step="0.01"
-                            required
-                          />
-                          {errors.products?.[index]?.unit_price && (
-                            <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                              {errors.products[index].unit_price}
-                            </div>
-                          )}
+                        <td style={styles.tableCell}>
+                          <input type="number" value={p.unit_price} onChange={(e) => handleProductChange(i, "unit_price", e.target.value)} style={{ ...styles.input, ...(errors.products?.[i]?.unit_price ? styles.errorInput : {}) }} min="0" step="0.01" required />
+                          {errors.products?.[i]?.unit_price && <div style={styles.errorText}>{errors.products[i].unit_price}</div>}
                         </td>
-                        <td style={{ border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
-                          {(product.qty * product.unit_price).toFixed(2)}
-                        </td>
-                        <td style={{ border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
+                        <td style={styles.tableCell}>{(p.qty * p.unit_price).toFixed(2)}</td>
+                        <td style={styles.tableCell}>
                           <button
                             type="button"
-                            onClick={() => removeProduct(index)}
-                            style={{
-                              padding: "0.3rem 0.5rem",
-                              backgroundColor: "#dc2626",
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: "5px",
-                              fontSize: "0.8rem",
-                              cursor: form.products.length === 1 ? "not-allowed" : "pointer",
-                              transition: "background-color 0.3s",
-                            }}
+                            onClick={() => removeProduct(i)}
+                            style={{ ...styles.removeButton, cursor: form.products.length === 1 ? "not-allowed" : "pointer" }}
                             disabled={form.products.length === 1}
-                            onMouseOver={(e) => {
-                              if (form.products.length > 1) e.target.style.backgroundColor = "#b91c1c";
-                            }}
-                            onMouseOut={(e) => {
-                              if (form.products.length > 1) e.target.style.backgroundColor = "#dc2626";
-                            }}
+                            onMouseOver={(e) => form.products.length > 1 && (e.target.style.backgroundColor = "#b91c1c")}
+                            onMouseOut={(e) => form.products.length > 1 && (e.target.style.backgroundColor = "#dc2626")}
                           >
                             Remove
                           </button>
@@ -955,135 +312,38 @@ const Quotation = () => {
                     ))}
                   </tbody>
                 </table>
-                <button
-                  type="button"
-                  onClick={addProduct}
-                  style={{
-                    padding: "0.5rem 1rem",
-                    backgroundColor: "#000",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "5px",
-                    fontSize: "0.9rem",
-                    cursor: "pointer",
-                    transition: "background-color 0.3s",
-                  }}
-                  onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
-                  onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}
-                >
+                <button type="button" onClick={addProduct} style={styles.button} onMouseOver={(e) => (e.target.style.backgroundColor = "#333")} onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}>
                   Add Product
                 </button>
               </div>
-
-              <div style={{ marginTop: "1rem" }}>
-                <h3 style={{ fontSize: "1.1rem", color: "#333", marginBottom: "0.5rem" }}>
-                  Totals
-                </h3>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
-                  <div>
-                    <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                      Subtotal
-                    </label>
-                    <input
-                      type="text"
-                      value={subtotal.toFixed(2)}
-                      style={{
-                        border: errors.subtotal ? "1px solid #dc2626" : "1px solid #ccc",
-                        padding: "0.5rem",
-                        width: "100%",
-                        borderRadius: "5px",
-                        fontSize: "0.9rem",
-                        boxSizing: "border-box",
-                        backgroundColor: "#f3f4f6",
-                      }}
-                      readOnly
-                    />
-                    {errors.subtotal && (
-                      <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                        {errors.subtotal}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                      VAT Amount
-                    </label>
-                    <input
-                      type="text"
-                      value={vat_amount.toFixed(2)}
-                      style={{
-                        border: errors.vat_amount ? "1px solid #dc2626" : "1px solid #ccc",
-                        padding: "0.5rem",
-                        width: "100%",
-                        borderRadius: "5px",
-                        fontSize: "0.9rem",
-                        boxSizing: "border-box",
-                        backgroundColor: "#f3f4f6",
-                      }}
-                      readOnly
-                    />
-                    {errors.vat_amount && (
-                      <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                        {errors.vat_amount}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>
-                      Grand Total
-                    </label>
-                    <input
-                      type="text"
-                      value={grand_total.toFixed(2)}
-                      style={{
-                        border: errors.grand_total ? "1px solid #dc2626" : "1px solid #ccc",
-                        padding: "0.5rem",
-                        width: "100%",
-                        borderRadius: "5px",
-                        fontSize: "0.9rem",
-                        boxSizing: "border-box",
-                        backgroundColor: "#f3f4f6",
-                      }}
-                      readOnly
-                    />
-                    {errors.grand_total && (
-                      <div style={{ color: "#dc2626", fontSize: "0.8rem" }}>
-                        {errors.grand_total}
-                      </div>
-                    )}
-                  </div>
-                </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "inline-flex", alignItems: "center" }}>
+                  <input type="checkbox" name="vat_applicable" checked={form.vat_applicable} onChange={handleChange} style={{ marginRight: "0.5rem" }} />
+                  <span style={{ color: "#333", fontSize: "0.9rem" }}>VAT Applicable</span>
+                </label>
               </div>
-
-              <label style={{ display: "inline-flex", alignItems: "center", marginTop: "1rem" }}>
-                <input
-                  type="checkbox"
-                  name="vat_applicable"
-                  checked={form.vat_applicable}
-                  onChange={handleChange}
-                  style={{ marginRight: "0.5rem" }}
-                />
-                <span style={{ color: "#333", fontSize: "0.9rem" }}>VAT Applicable</span>
-              </label>
-
-              <button
-                type="submit"
-                style={{
-                  padding: "0.5rem 1rem",
-                  backgroundColor: "#000",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "5px",
-                  fontSize: "0.9rem",
-                  cursor: "pointer",
-                  textTransform: "uppercase",
-                  transition: "background-color 0.3s",
-                  width: "100%",
-                  marginTop: "1rem",
-                }}
-                onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
-                onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}
-              >
+              <div style={{ marginBottom: "1rem" }}>
+                <div style={styles.flexRow}>
+                  <span style={{ color: "#333", fontSize: "0.9rem" }}>VAT Percentage</span>
+                  <input name="vat_percentage" type="number" value={form.vat_percentage} onChange={handleChange} style={{ ...styles.input, width: "100px", ...(errors.vat_percentage ? styles.errorInput : {}) }} disabled={!form.vat_applicable} />
+                </div>
+                {errors.vat_percentage && <div style={styles.errorText}>{errors.vat_percentage}</div>}
+              </div>
+              {[{ label: "Subtotal (AED)", value: subtotal }, { label: "VAT Amount (AED)", value: vat_amount }, { label: "Grand Total (AED)", value: grand_total }].map(({ label, value }, i) => (
+                <div key={i} style={{ marginBottom: "1rem" }}>
+                  <div style={styles.flexRow}>
+                    <span style={{ color: "#333", fontSize: "0.9rem", fontWeight: "500" }}>{label}</span>
+                    <span style={{ color: "#333", fontSize: "0.9rem" }}>{value.toFixed(2)}</span>
+                  </div>
+                  {errors[label.toLowerCase().replace(" (aed)", "")] && <div style={styles.errorText}>{errors[label.toLowerCase().replace(" (aed)", "")]}</div>}
+                </div>
+              ))}
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={styles.label}>Notes/Remarks</label>
+                <textarea name="notes_remarks" value={form.notes_remarks} onChange={handleChange} style={{ ...styles.input, height: "100px", ...(errors.notes_remarks ? styles.errorInput : {}) }} />
+                {errors.notes_remarks && <div style={styles.errorText}>{errors.notes_remarks}</div>}
+              </div>
+              <button type="submit" style={{ ...styles.button, width: "100%", textTransform: "uppercase" }} onMouseOver={(e) => (e.target.style.backgroundColor = "#333")} onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}>
                 {isEditing ? "Update Quotation" : "Submit Quotation"}
               </button>
             </form>
@@ -1091,118 +351,42 @@ const Quotation = () => {
         </div>
       )}
 
-      {/* Quotation Table */}
       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "1rem" }}>
         <thead>
           <tr>
-            <th style={{ backgroundColor: "#000", color: "#fff", border: "1px solid #000", padding: "0.5rem" }}>
-              Company Name
-            </th>
-            <th style={{ backgroundColor: "#000", color: "#fff", border: "1px solid #000", padding: "0.5rem" }}>
-              Contact Name
-            </th>
-            <th style={{ backgroundColor: "#000", color: "#fff", border: "1px solid #000", padding: "0.5rem" }}>
-              Contact Number
-            </th>
-            <th style={{ backgroundColor: "#000", color: "#fff", border: "1px solid #000", padding: "0.5rem" }}>
-              Status
-            </th>
-            <th style={{ backgroundColor: "#000", color: "#fff", border: "1px solid #000", padding: "0.5rem" }}>
-              Quote No
-            </th>
-            <th style={{ backgroundColor: "#000", color: "#fff", border: "1px solid #000", padding: "0.5rem" }}>
-              Quote Title
-            </th>
-            <th style={{ backgroundColor: "#000", color: "#fff", border: "1px solid #000", padding: "0.5rem" }}>
-              Assign To
-            </th>
-            <th style={{ backgroundColor: "#000", color: "#fff", border: "1px solid #000", padding: "0.5rem" }}>
-              Created By
-            </th>
-            <th style={{ backgroundColor: "#000", color: "#fff", border: "1px solid #000", padding: "0.5rem" }}>
-              Create Date
-            </th>
-            <th style={{ backgroundColor: "#000", color: "#fff", border: "1px solid #000", padding: "0.5rem" }}>
-              Actions
-            </th>
+            {["S No.", "Company Name", "Contact Name", "Contact Number", "Status", "Quote No", "Quote Title", "Assign To", "Created By", "Create Date", "Actions"].map((header) => (
+              <th key={header} style={styles.tableHeader}>{header}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {filteredQuotes.map((q) => (
+          {filteredQuotes.map((q, i) => (
             <tr key={q.id}>
-              <td style={{ backgroundColor: "#fff", border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
-                {q.company_name || "-"}
-              </td>
-              <td style={{ backgroundColor: "#fff", border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
-                {q.contact_name || "-"}
-              </td>
-              <td style={{ backgroundColor: "#fff", border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
-                {q.contact_number || "-"}
-              </td>
-              <td style={{ backgroundColor: "#fff", border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
-                <select
-                  value={q.status}
-                  onChange={(e) => handleStatusChange(q.id, e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "0.25rem",
-                    border: "1px solid #ccc",
-                    borderRadius: "5px",
-                    fontSize: "0.9rem",
-                    boxSizing: "border-box",
-                  }}
-                >
+              <td style={styles.tableCell}>{i + 1}</td>
+              <td style={styles.tableCell}>{q.company_name || "-"}</td>
+              <td style={styles.tableCell}>{q.contact_name || "-"}</td>
+              <td style={styles.tableCell}>{q.contact_number || "-"}</td>
+              <td style={styles.tableCell}>
+                <select value={q.status} onChange={(e) => handleStatusChange(q.id, e.target.value)} style={{ ...styles.input, width: "100%", padding: "0.25rem" }}>
                   <option value="new">New</option>
                   <option value="open">Open</option>
                   <option value="closed">Closed</option>
                 </select>
               </td>
-              <td style={{ backgroundColor: "#fff", border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
-                {q.quote_no || "-"}
-              </td>
-              <td style={{ backgroundColor: "#fff", border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
-                {q.quote_title || "-"}
-              </td>
-              <td style={{ backgroundColor: "#fff", border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
-                <select
-                  value={q.assign_to || ""}
-                  onChange={(e) => handleAssignToChange(q.id, e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "0.25rem",
-                    border: "1px solid #ccc",
-                    borderRadius: "5px",
-                    fontSize: "0.9rem",
-                    boxSizing: "border-box",
-                  }}
-                >
+              <td style={styles.tableCell}>{q.quote_no || "-"}</td>
+              <td style={styles.tableCell}>{q.quote_title || "-"}</td>
+              <td style={styles.tableCell}>
+                <select value={q.assign_to || ""} onChange={(e) => handleAssignToChange(q.id, e.target.value)} style={{ ...styles.input, width: "100%", padding: "0.25rem" }}>
                   <option value="">Select User</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.username}
-                    </option>
-                  ))}
+                  {users.map((u) => <option key={u.id} value={u.id}>{u.username}</option>)}
                 </select>
               </td>
-              <td style={{ backgroundColor: "#fff", border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
-                {q.created_by?.username || "-"}
-              </td>
-              <td style={{ backgroundColor: "#fff", border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
-                {formatDate(q.create_date) || "-"}
-              </td>
-              <td style={{ backgroundColor: "#fff", border: "1px solid #000", padding: "0.5rem", textAlign: "center" }}>
+              <td style={styles.tableCell}>{q.created_by?.username || "-"}</td>
+              <td style={styles.tableCell}>{formatDate(q.create_date) || "-"}</td>
+              <td style={styles.tableCell}>
                 <button
                   onClick={() => handleEditQuote(q)}
-                  style={{
-                    padding: "0.3rem 0.5rem",
-                    backgroundColor: "#000",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "5px",
-                    fontSize: "0.8rem",
-                    cursor: "pointer",
-                    transition: "background-color 0.3s",
-                  }}
+                  style={{ ...styles.button, ...styles.smallButton }}
                   onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
                   onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}
                 >

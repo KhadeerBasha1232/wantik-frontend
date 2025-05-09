@@ -15,7 +15,7 @@ const Contacts = () => {
 
   const fetchContacts = async () => {
     try {
-      const response = await axios.get("https://wantik-backend-kb.onrender.com/sales/contacts/all/", { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.get("http://127.0.0.1:8000/sales/contacts/all/", { headers: { Authorization: `Bearer ${token}` } });
       setContacts(response.data);
     } catch (error) {
       console.error("Error fetching contacts", error);
@@ -36,7 +36,7 @@ const Contacts = () => {
       }
     }
     try {
-      await axios[editId ? "put" : "post"](`https://wantik-backend-kb.onrender.com/sales/contacts/${editId ? `${editId}/` : ""}`, payload, {
+      await axios[editId ? "put" : "post"](`http://127.0.0.1:8000/sales/contacts/${editId ? `${editId}/` : ""}`, payload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
       });
       fetchContacts();
@@ -63,14 +63,13 @@ const Contacts = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this contact?")) {
       try {
-        await axios.delete(`https://wantik-backend-kb.onrender.com/sales/contacts/${id}/`, { headers: { Authorization: `Bearer ${token}` } });
+        await axios.delete(`http://127.0.0.1:8000/sales/contacts/${id}/`, { headers: { Authorization: `Bearer ${token}` } });
         fetchContacts();
       } catch (error) {
         console.error("Error deleting contact", error);
       }
     }
   };
-
 
   const filteredContacts = contacts.filter((contact) => contact.company_name.toLowerCase().includes(filterCompany.toLowerCase()));
   const buttonStyle = { padding: "0.5rem 1rem", backgroundColor: "#000", color: "#fff", border: "none", borderRadius: "5px", fontSize: "0.9rem", cursor: "pointer", textTransform: "uppercase", transition: "background-color 0.3s" };
@@ -97,17 +96,133 @@ const Contacts = () => {
             <span onClick={handleCloseForm} style={closeBtnStyle}>×</span>
             <form onSubmit={handleSubmit} style={{ padding: "1rem 0" }}>
               <h2 style={{ marginBottom: "1rem", fontSize: "1.5rem", color: "#333" }}>{editId ? "Edit Contact" : "Add Contact"}</h2>
-              {[["company_name", "Company Name"], ["contact_name", "Contact Name"], ["company_email", "Company Email"], ["contact_email", "Contact Email"], ["company_number", "Company Number"], ["contact_number", "Contact Number"], ["license_number", "License Number"], ["license_expiry_date", "License Expiry Date"], ["tirn_number", "TIRN Number"]].map(([name, label]) => (
-                <div key={name} style={{ marginBottom: "1rem" }}>
-                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>{label}</label>
-                  <input type={name.includes("date") ? "date" : "text"} name={name} value={editFormData[name]} onChange={handleChange} required style={inputStyle} />
+              {/* Company Name and Contact Name (Side by Side) */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Company Name</label>
+                  <input
+                    type="text"
+                    name="company_name"
+                    value={editFormData.company_name}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  />
                 </div>
-              ))}
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Upload License PDF</label>
-                <input type="file" name="license_file" onChange={handleChange} required={editId === null} style={inputStyle} />
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Contact Name</label>
+                  <input
+                    type="text"
+                    name="contact_name"
+                    value={editFormData.contact_name}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  />
+                </div>
               </div>
-              <button type="submit" style={{ ...buttonStyle, width: "100%" }} onMouseOver={(e) => (e.target.style.backgroundColor = "#333")} onMouseOut={(e) => (e.target.style.backgroundColor = "#000")} aria-label={editId ? "Update contact" : "Save contact"}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Company Email</label>
+                  <input
+                    type="text"
+                    name="company_email"
+                    value={editFormData.company_email}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Contact Email</label>
+                  <input
+                    type="text"
+                    name="contact_email"
+                    value={editFormData.contact_email}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Company Number</label>
+                  <input
+                    type="text"
+                    name="company_number"
+                    value={editFormData.company_number}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Contact Number</label>
+                  <input
+                    type="text"
+                    name="contact_number"
+                    value={editFormData.contact_number}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>License Number</label>
+                  <input
+                    type="text"
+                    name="license_number"
+                    value={editFormData.license_number}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>TIRN Number</label>
+                  <input
+                    type="text"
+                    name="tirn_number"
+                    value={editFormData.tirn_number}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>License Expiry Date</label>
+                  <input
+                    type="date"
+                    name="license_expiry_date"
+                    value={editFormData.license_expiry_date}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Upload License PDF</label>
+                  <input
+                    type="file"
+                    name="license_file"
+                    onChange={handleChange}
+                    required={editId === null}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                style={{ ...buttonStyle, width: "100%" }}
+                onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
+                onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}
+                aria-label={editId ? "Update contact" : "Save contact"}
+              >
                 {editId ? "Update Contact" : "Save Contact"}
               </button>
             </form>

@@ -20,7 +20,7 @@ const SignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("https://wantik-backend-kb.onrender.com/auth/signup/", formData);
+      const res = await axios.post("http://127.0.0.1:8000/auth/signup/", formData);
       setError(null);
       toast.success("Registration successful! Please sign in.", {
         position: "top-right",

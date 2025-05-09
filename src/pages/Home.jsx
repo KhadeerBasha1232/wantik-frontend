@@ -3,29 +3,60 @@ import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const navigate = useNavigate();
-  const buttonStyle = {
-    padding: "0.5rem 1rem", backgroundColor: "#000", color: "#fff", border: "none", borderRadius: "5px",
-    fontSize: "0.9rem", cursor: "pointer", textTransform: "uppercase", transition: "background-color 0.3s"
-  };
-  const handleClick = (year, type) => navigate(`/${type}/${year}`);
-  const handleLogout = () => (localStorage.clear(), navigate("/signin"));
+
+  const buttons = [
+    { label: "Contacts", action: () => navigate("/contacts"), aria: "Go to contacts" },
+    { label: "Jobcards", action: () => navigate("/jobcards"), aria: "Go to jobcards" },
+    { label: "2025 - Incoming", action: () => navigate("/incoming/2025"), aria: "View 2025 incoming quotes" },
+    { label: "2025 - Outgoing", action: () => navigate("/outgoing/2025"), aria: "View 2025 outgoing quotes" },
+  ];
 
   return (
-    <div style={{ padding: "2rem", textAlign: "center", minHeight: "100vh", position: "relative" }}>
-      <button onClick={handleLogout} style={{ ...buttonStyle, position: "absolute", top: "1rem", right: "1rem" }}
-        onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
-        onMouseOut={(e) => (e.target.style.backgroundColor = "#000")} aria-label="Logout">Logout</button>
-      <h1 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "2rem" }}>Sales</h1>
-      <button onClick={() => navigate("/contacts")} style={{ ...buttonStyle, width: "100%", maxWidth: "300px", margin: "0 auto 1rem auto" }}
-        onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
-        onMouseOut={(e) => (e.target.style.backgroundColor = "#000")} aria-label="Go to contacts">Contacts</button>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", width: "100%" }}>
-        {["incoming", "outgoing"].map(type => (
-          <button key={type} onClick={() => handleClick(2025, type)} style={{ ...buttonStyle, flex: "1", minWidth: "200px" }}
-            onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
-            onMouseOut={(e) => (e.target.style.backgroundColor = "#000")} aria-label={`View 2025 ${type} quotes`}>
-            {`2025 - ${type.toUpperCase()}`}
-          </button>
+    <div className="container-fluid p-5 text-center min-vh-90 position-relative">
+      <style>
+        {`
+          .custom-btn:hover {
+            background-color: #333 !important;
+          }
+          .custom-btn {
+            width: 45vw;
+            height: 40vh;
+            min-width: 200px;
+            min-height: 150px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+          .custom-logout-btn {
+            font-size: 0.9rem;
+            border-radius: 5px;
+          }
+        `}
+      </style>
+      <button
+        onClick={() => {
+          localStorage.clear();
+          navigate("/signin");
+        }}
+        className="btn btn-dark custom-logout-btn text-uppercase position-absolute top-0 end-0 mt-3 me-3"
+        aria-label="Logout"
+      >
+        Logout
+      </button>
+      <h1 className="mb-5 fs-3 text-dark">Sales</h1>
+      <div className="row row-cols-2 g-3" style={{ height: "calc(100vh - 8rem)" }}>
+        {buttons.map(({ label, action, aria }) => (
+          <div key={label} className="col">
+            <button
+              onClick={action}
+              className="btn btn-dark custom-btn text-uppercase w-100 h-100"
+              aria-label={aria}
+            >
+              {label}
+            </button>
+          </div>
         ))}
       </div>
     </div>

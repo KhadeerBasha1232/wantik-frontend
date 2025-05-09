@@ -15,7 +15,7 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("https://wantik-backend-kb.onrender.com/auth/signin/", credentials);
+      const res = await axios.post("http://127.0.0.1:8000/auth/signin/", credentials);
       const { access, refresh } = res.data;
       localStorage.setItem("accessToken", access);
       localStorage.setItem("refreshToken", refresh);

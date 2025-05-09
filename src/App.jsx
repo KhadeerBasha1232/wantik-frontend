@@ -8,6 +8,8 @@ import Contacts from "./pages/Contacts";
 import Incoming from "./pages/Incoming";
 import Outgoing from "./pages/Outgoing";
 import Quotation from "./pages/Quotation";
+import JobCards from "./pages/JobCards";
+import SalesOrder from "./pages/SalesOrder";
 
 const PrivateRoute = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // null = verifying, true = valid, false = invalid
@@ -23,7 +25,7 @@ const PrivateRoute = () => {
 
       try {
         const res = await axios.post(
-          "https://wantik-backend-kb.onrender.com/auth/verify/",
+          "http://127.0.0.1:8000/auth/verify/",
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -82,7 +84,7 @@ const PublicRoute = () => {
 
       try {
         const res = await axios.post(
-          "https://wantik-backend-kb.onrender.com/auth/verify/",
+          "http://127.0.0.1:8000/auth/verify/",
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -142,6 +144,8 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route path="/home" element={<Home />} />
           <Route path="/contacts" element={<Contacts />} />
+          <Route path="/jobcards" element={<JobCards />} />
+          <Route path="/salesorder" element={<SalesOrder />} />
           <Route path="/incoming/:year" element={<Incoming />} />
           <Route path="/outgoing/:year" element={<Outgoing />} />
           <Route path="/quotations/:year" element={<Quotation />} />

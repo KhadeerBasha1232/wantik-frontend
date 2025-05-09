@@ -19,9 +19,9 @@ const Incoming = () => {
   useEffect(() => {
     if (!token) return console.error("Access token not found.");
     Promise.all([
-      axios.get(`https://wantik-backend-kb.onrender.com/sales/inquiries/?year=${year}`, { headers: { Authorization: `Bearer ${token}` } }).then(res => { setInquiries(res.data); setFilteredInquiries(res.data); }),
-      axios.get("https://wantik-backend-kb.onrender.com/sales/incoming-companies/", { headers: { Authorization: `Bearer ${token}` } }).then(res => setCompanies(res.data)),
-      axios.get("https://wantik-backend-kb.onrender.com/sales/users/", { headers: { Authorization: `Bearer ${token}` } }).then(res => setUsers(res.data))
+      axios.get(`http://127.0.0.1:8000/sales/inquiries/?year=${year}`, { headers: { Authorization: `Bearer ${token}` } }).then(res => { setInquiries(res.data); setFilteredInquiries(res.data); }),
+      axios.get("http://127.0.0.1:8000/sales/incoming-companies/", { headers: { Authorization: `Bearer ${token}` } }).then(res => setCompanies(res.data)),
+      axios.get("http://127.0.0.1:8000/sales/users/", { headers: { Authorization: `Bearer ${token}` } }).then(res => setUsers(res.data))
     ]).catch(err => console.error("Error fetching data:", err));
   }, [year, token]);
 
@@ -65,14 +65,14 @@ const Incoming = () => {
 
   const handleStatusChange = (id, status) => {
     if (!token) return console.error("Access token not found.");
-    axios.patch(`https://wantik-backend-kb.onrender.com/sales/inquiries/${id}/`, { status }, { headers: { Authorization: `Bearer ${token}` } })
+    axios.patch(`http://127.0.0.1:8000/sales/inquiries/${id}/`, { status }, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setInquiries(inquiries.map(inquiry => inquiry.id === id ? { ...inquiry, status: res.data.status } : inquiry)))
       .catch(err => console.error("Error updating status:", err));
   };
 
   const handleAssignToChange = (id, assignToId) => {
     if (!token) return console.error("Access token not found.");
-    axios.patch(`https://wantik-backend-kb.onrender.com/sales/inquiries/${id}/`, { assign_to: assignToId }, { headers: { Authorization: `Bearer ${token}` } })
+    axios.patch(`http://127.0.0.1:8000/sales/inquiries/${id}/`, { assign_to: assignToId }, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setInquiries(inquiries.map(inquiry => inquiry.id === id ? { ...inquiry, assign_to: res.data.assign_to } : inquiry)))
       .catch(err => console.error("Error updating assign_to:", err));
   };
@@ -80,7 +80,7 @@ const Incoming = () => {
   const handleSubmit = e => {
     e.preventDefault();
     if (!token) return console.error("Access token not found.");
-    axios[isEditing ? "put" : "post"](`https://wantik-backend-kb.onrender.com/sales/inquiries/${isEditing ? `${editId}/` : ""}`, formData, { headers: { Authorization: `Bearer ${token}` } })
+    axios[isEditing ? "put" : "post"](`http://127.0.0.1:8000/sales/inquiries/${isEditing ? `${editId}/` : ""}`, formData, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => {
         setInquiries(isEditing ? inquiries.map(inquiry => inquiry.id === editId ? res.data : inquiry) : [res.data, ...inquiries]);
         setShowForm(false);
@@ -135,16 +135,18 @@ const Incoming = () => {
             <span onClick={() => setShowForm(false)} style={closeBtnStyle}>×</span>
             <form onSubmit={handleSubmit} style={{ padding: "1rem 0" }}>
               <h2 style={{ marginBottom: "1rem", fontSize: "1.5rem", color: "#333" }}>{isEditing ? "Edit Inquiry" : "Add Inquiry"}</h2>
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Company Name:</label>
-                <select name="company_name" value={formData.company_name} onChange={handleCompanyChange} required style={{ ...inputStyle, width: "100%" }}>
-                  <option value="">Select Company</option>
-                  {companies.map(company => <option key={company.id} value={company.company_name}>{company.company_name}</option>)}
-                </select>
-              </div>
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Contact Number:</label>
-                <input type="text" name="contact_number" value={formData.contact_number} onChange={handleInputChange} required style={{ ...inputStyle, width: "100%" }} />
+              <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Company Name:</label>
+                  <select name="company_name" value={formData.company_name} onChange={handleCompanyChange} required style={{ ...inputStyle, width: "100%" }}>
+                    <option value="">Select Company</option>
+                    {companies.map(company => <option key={company.id} value={company.company_name}>{company.company_name}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Contact Number:</label>
+                  <input type="text" name="contact_number" value={formData.contact_number} onChange={handleInputChange} required style={{ ...inputStyle, width: "100%" }} />
+                </div>
               </div>
               <div style={{ marginBottom: "1rem" }}>
                 <label style={{ display: "block", color: "#333", fontSize: "0.9rem", marginBottom: "0.25rem" }}>Inquiry:</label>
