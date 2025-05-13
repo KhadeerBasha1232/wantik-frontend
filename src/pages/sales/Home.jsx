@@ -1,15 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const Home = () => {
+const SalesHome = () => {
   const navigate = useNavigate();
 
   const buttons = [
-    { label: "Sales", action: () => navigate("/sales/home"), aria: "Go to sales" },
-    { label: "HR", action: () => navigate("/hr/home"), aria: "Go to HR" },
-    { label: "Inventory", action: () => navigate("/inventory"), aria: "Go to Inventory" },
-    { label: "CRM", action: () => navigate("/crm"), aria: "Go to CRM" },
-    { label: "Accounts", action: () => navigate("/accounts"), aria: "Go to Accounts" },
+    { label: "Contacts", action: () => navigate("/sales/contacts"), aria: "Go to contacts" },
+    { label: "Jobcards", action: () => navigate("/sales/jobcards"), aria: "Go to jobcards" },
+    { label: "2025 - Incoming", action: () => navigate("/sales/incoming/2025"), aria: "View 2025 incoming quotes" },
+    { label: "2025 - Outgoing", action: () => navigate("/sales/outgoing/2025"), aria: "View 2025 outgoing quotes" },
   ];
 
   return (
@@ -73,7 +72,7 @@ const Home = () => {
       >
         Logout
       </button>
-      <h1 className="mb-5 fs-3 text-dark">Home</h1>
+      <h1 className="mb-5 fs-3 text-dark">Sales</h1>
       <div className="button-grid">
         {buttons.map(({ label, action, aria }) => (
           <div key={label} className="col">
@@ -91,4 +90,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default SalesHome;

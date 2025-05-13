@@ -3,13 +3,26 @@ import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation }
 import axios from "axios";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
+import SalesHome from "./pages/sales/Home";
+import Contacts from "./pages/sales/Contacts";
+import Incoming from "./pages/sales/Incoming";
+import Outgoing from "./pages/sales/Outgoing";
+import Quotation from "./pages/sales/Quotation";
+import JobCards from "./pages/sales/JobCards";
+import SalesOrder from "./pages/sales/SalesOrder";
 import Home from "./pages/Home";
-import Contacts from "./pages/Contacts";
-import Incoming from "./pages/Incoming";
-import Outgoing from "./pages/Outgoing";
-import Quotation from "./pages/Quotation";
-import JobCards from "./pages/JobCards";
-import SalesOrder from "./pages/SalesOrder";
+import HrHome from "./pages/hr/HrHome";
+import StaffPortal from "./pages/hr/StaffPortal";
+import StaffDetails from "./pages/hr/StaffDetails";
+import VisaStatus from "./pages/hr/VisaStatus";
+import Attendance from "./pages/hr/Attendance";
+import Leaves from "./pages/hr/Leaves";
+import Loans from "./pages/hr/Loans";
+import Overtimes from "./pages/hr/Overtimes";
+import Fines from "./pages/hr/Fines";
+import Appraisals from "./pages/hr/Appraisals";
+import Performance from "./pages/hr/Performance";
+import StaffPerformance from "./pages/hr/StaffPerformance";
 
 const PrivateRoute = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // null = verifying, true = valid, false = invalid
@@ -143,12 +156,27 @@ function App() {
         {/* Protected Routes */}
         <Route element={<PrivateRoute />}>
           <Route path="/home" element={<Home />} />
-          <Route path="/contacts" element={<Contacts />} />
-          <Route path="/jobcards" element={<JobCards />} />
-          <Route path="/salesorder" element={<SalesOrder />} />
-          <Route path="/incoming/:year" element={<Incoming />} />
-          <Route path="/outgoing/:year" element={<Outgoing />} />
-          <Route path="/quotations/:year" element={<Quotation />} />
+          <Route path="/sales/home" element={<SalesHome />} />
+          <Route path="/sales/contacts" element={<Contacts />} />
+          <Route path="/sales/jobcards" element={<JobCards />} />
+          <Route path="/sales/salesorder" element={<SalesOrder />} />
+          <Route path="/sales/incoming/:year" element={<Incoming />} />
+          <Route path="/sales/outgoing/:year" element={<Outgoing />} />
+          <Route path="/sales/quotations/:year" element={<Quotation />} />
+
+
+          <Route path="/hr/home" element={<HrHome />} />
+          <Route path="/hr/:type" element={<StaffPortal />} />
+          <Route path="/hr/:type/staffdetails" element={<StaffDetails />} />
+          <Route path="/hr/:type/visastatus" element={<VisaStatus />} />
+          <Route path="/hr/:type/attendance" element={<Attendance />} />
+          <Route path="/hr/:type/leaves" element={<Leaves />} />
+          <Route path="/hr/:type/loans" element={<Loans />} />
+          <Route path="/hr/:type/overtimes" element={<Overtimes />} />
+          <Route path="/hr/:type/fines" element={<Fines />} />
+          <Route path="/hr/:type/appraisals" element={<Appraisals />} />
+          <Route path="/hr/:type/performance" element={<Performance />} />
+          <Route path="/hr/:type/performance/:staff_id" element={<StaffPerformance />} />
         </Route>
       </Routes>
     </Router>

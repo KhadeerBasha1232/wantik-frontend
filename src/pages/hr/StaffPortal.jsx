@@ -1,15 +1,20 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const Home = () => {
+const StaffPortal = () => {
   const navigate = useNavigate();
+  const { type } = useParams(); // Get the type parameter from the URL
 
   const buttons = [
-    { label: "Sales", action: () => navigate("/sales/home"), aria: "Go to sales" },
-    { label: "HR", action: () => navigate("/hr/home"), aria: "Go to HR" },
-    { label: "Inventory", action: () => navigate("/inventory"), aria: "Go to Inventory" },
-    { label: "CRM", action: () => navigate("/crm"), aria: "Go to CRM" },
-    { label: "Accounts", action: () => navigate("/accounts"), aria: "Go to Accounts" },
+    { label: "Staff Details", action: () => navigate(`/hr/${type}/staffdetails`), aria: "Go to staff details" },
+    { label: "Visa Status", action: () => navigate(`/hr/${type}/visastatus`), aria: "Go to Visa Status" },
+    { label: "Attendance", action: () => navigate(`/hr/${type}/attendance`), aria: "Go to Attendance" },
+    { label: "Leaves", action: () => navigate(`/hr/${type}/leaves`), aria: "Go to Leaves" },
+    { label: "Loans", action: () => navigate(`/hr/${type}/loans`), aria: "Go to Loans" },
+    { label: "Overtime", action: () => navigate(`/hr/${type}/overtimes`), aria: "Go to OverTime" },
+    { label: "Fines", action: () => navigate(`/hr/${type}/fines`), aria: "Go to Fines" },
+    { label: "Appraisals", action: () => navigate(`/hr/${type}/appraisals`), aria: "Go to Appraisals" },
+    { label: "Performance Management", action: () => navigate(`/hr/${type}/performance`), aria: "Go to Performance Management" },
   ];
 
   return (
@@ -73,7 +78,7 @@ const Home = () => {
       >
         Logout
       </button>
-      <h1 className="mb-5 fs-3 text-dark">Home</h1>
+      <h1 className="mb-5 fs-3 text-dark">{type === "staff" ? "Staff" : "Manpower"} Portal</h1>
       <div className="button-grid">
         {buttons.map(({ label, action, aria }) => (
           <div key={label} className="col">
@@ -91,4 +96,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default StaffPortal;

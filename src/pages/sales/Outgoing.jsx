@@ -95,7 +95,7 @@ const Outgoing = () => {
     }
   };
 
-  const handleViewQuotations = () => navigate(`/quotations/${year}`);
+  const handleViewQuotations = () => navigate(`/sales/quotations/${year}`);
 
   const handleViewMail = mail => setViewMail(mail);
 
