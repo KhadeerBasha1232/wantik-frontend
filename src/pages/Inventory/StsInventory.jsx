@@ -1,15 +1,12 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const Home = () => {
+const STSInventory = () => {
   const navigate = useNavigate();
 
   const buttons = [
-    { label: "Sales", action: () => navigate("/sales/home"), aria: "Go to sales" },
-    { label: "HR", action: () => navigate("/hr/home"), aria: "Go to HR" },
-    { label: "Inventory", action: () => navigate("/inventory/home"), aria: "Go to Inventory" },
-    { label: "CRM", action: () => navigate("/crm"), aria: "Go to CRM" },
-    { label: "Accounts", action: () => navigate("/accounts"), aria: "Go to Accounts" },
+    { label: "Local", action: () => navigate("/inventory/sts-inventory/local"), aria: "Go to Local STS Inventory" },
+    { label: "Imported", action: () => navigate("/inventory/sts-inventory/imported"), aria: "Go to Imported STS Inventory" },
   ];
 
   return (
@@ -73,7 +70,7 @@ const Home = () => {
       >
         Logout
       </button>
-      <h1 className="mb-5 fs-3 text-dark">Home</h1>
+      <h1 className="mb-5 fs-3 text-dark">STS Inventory</h1>
       <div className="button-grid">
         {buttons.map(({ label, action, aria }) => (
           <div key={label} className="col">
@@ -91,4 +88,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default STSInventory;

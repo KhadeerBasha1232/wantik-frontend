@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation } from "react-router-dom";
 import axios from "axios";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import SalesHome from "./pages/sales/Home";
@@ -23,6 +25,10 @@ import Fines from "./pages/hr/Fines";
 import Appraisals from "./pages/hr/Appraisals";
 import Performance from "./pages/hr/Performance";
 import StaffPerformance from "./pages/hr/StaffPerformance";
+import InventoryHome from "./pages/Inventory/InventoryHome";
+import STSInventory from "./pages/Inventory/StsInventory";
+import STSInventoryType from "./pages/Inventory/StsInventoryType";
+import STSInventoryTypeRemove from "./pages/Inventory/StsInventoryTypeRemove";
 
 const PrivateRoute = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // null = verifying, true = valid, false = invalid
@@ -145,6 +151,18 @@ const PublicRoute = () => {
 function App() {
   return (
     <Router>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <Routes>
         {/* Public Routes */}
         <Route element={<PublicRoute />}>
@@ -177,6 +195,12 @@ function App() {
           <Route path="/hr/:type/appraisals" element={<Appraisals />} />
           <Route path="/hr/:type/performance" element={<Performance />} />
           <Route path="/hr/:type/performance/:staff_id" element={<StaffPerformance />} />
+          
+          
+          <Route path="/inventory/home" element={<InventoryHome />} />
+          <Route path="/inventory/sts-inventory" element={<STSInventory />} /> 
+          <Route path="/inventory/sts-inventory/:type" element={<STSInventoryType />} />
+          <Route path="/inventory/sts-inventory/:type/removestock" element={<STSInventoryTypeRemove />} />
         </Route>
       </Routes>
     </Router>
